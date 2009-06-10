@@ -61,11 +61,13 @@ EndBanner
       create_apache_log_directory
       system "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
       File.open(config_filename, 'w') { |f| f.puts(vhost_config) }
+      restart_apache
     end
     def delete
       warn_and_return unless sudoer?
       system "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
       File.delete(config_filename)
+      restart_apache
     end
     def list
       Dir[File.join(VHOSTS_DIR, '*.conf')].each do |config_file|
@@ -130,6 +132,9 @@ EndBanner
       end
       def create_vhost_directory
         FileUtils.mkdir_p(VHOSTS_DIR)
+      end
+      def restart_apache
+        `apachectl restart`
       end
   end
 end
