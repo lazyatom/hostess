@@ -27,6 +27,8 @@ spec = Gem::Specification.new do |s|
   # as appropriate
   s.extra_rdoc_files  = %w(README)
   s.rdoc_options      = %w(--main README)
+  
+  s.require_paths     = ['bin']
 
   # Add any extra files to include in the gem (like your README)
   s.files             = %w(README Rakefile) + Dir.glob("{bin}/**/*")

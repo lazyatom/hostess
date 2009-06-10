@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.files = ["README", "Rakefile", "bin/hostess"]
   s.homepage = %q{http://chrisroos.co.uk}
   s.rdoc_options = ["--main", "README"]
-  s.require_paths = ["lib"]
+  s.require_paths = ["bin"]
   s.rubyforge_project = %q{hostess}
   s.rubygems_version = %q{1.3.3}
   s.summary = %q{Manage simple apache virtual hosts}
