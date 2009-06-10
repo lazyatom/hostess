@@ -1,10 +1,11 @@
 Hostess
 =======
 
-A simple tool for adding local directories as virtual hosts in a local apache installation.
-
+A simple tool for adding local directories as virtual hosts in a local apache installation. It probably only works well on a Mac, but we're scratching our own itch here.
 
 Usage
 -----
 
-$ sudo hostess create mysite.local /Users/myuser/Sites/mysite
+    $ sudo hostess create mysite.local /Users/myuser/Sites/mysite
+
+This will create a new virtual host in your Apache configuration, setup your Mac's DNS to respond to that domain name, and restart Apache to make the new virtual host live.
