@@ -1,0 +1,10 @@
+Hostess
+=======
+
+A simple tool for adding local directories as virtual hosts in a local apache installation.
+
+
+Usage
+-----
+
+$ sudo hostess create mysite.local /Users/myuser/Sites/mysite

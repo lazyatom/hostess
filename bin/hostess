@@ -1,0 +1,140 @@
+#! /usr/bin/env ruby
+
+require 'erb'
+require 'fileutils'
+require 'pathname'
+
+module Hostess
+  SCRIPT              = File.basename($0)
+  APACHE_CONFIG_DIR   = Pathname.new('/') + 'etc' + 'apache2'
+  APACHE_CONFIG       = APACHE_CONFIG_DIR + 'httpd.conf'
+  VHOSTS_DIR          = APACHE_CONFIG_DIR + "#{SCRIPT}_vhosts"
+  class Options
+    attr_reader :action, :domain, :directory
+    def initialize(action=nil, domain=nil, directory=nil)
+      @action, @domain, @directory = action, domain, directory
+    end
+    def directory
+      File.expand_path(@directory) if @directory
+    end
+    def display_banner_and_return
+      puts banner
+      exit
+    end
+    def valid?
+      valid_create? or valid_delete? or valid_list? or valid_help?
+    end
+    private
+      def valid_create?
+        @action == 'create' and domain and directory
+      end
+      def valid_delete?
+        @action == 'delete' and domain
+      end
+      def valid_list?
+        @action == 'list'
+      end
+      def valid_help?
+        @action == 'help'
+      end
+      def banner
+<<EndBanner
+  Usage:
+    #{SCRIPT} create domain directory - create a new virtual host
+    #{SCRIPT} delete domain           - delete a virtual host
+    #{SCRIPT} list                    - list #{SCRIPT} virtual hosts
+    #{SCRIPT} help                    - this info
+EndBanner
+      end
+  end
+  class VirtualHost
+    def initialize(options)
+      @options = options
+    end
+    def execute!
+      __send__(@options.action)
+    end
+    def create
+      warn_and_return unless sudoer?
+      setup_apache_config
+      create_vhost_directory
+      create_apache_log_directory
+      system "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
+      File.open(config_filename, 'w') { |f| f.puts(vhost_config) }
+    end
+    def delete
+      warn_and_return unless sudoer?
+      system "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
+      File.delete(config_filename)
+    end
+    def list
+      Dir[File.join(VHOSTS_DIR, '*.conf')].each do |config_file|
+        puts File.basename(config_file, '.conf')
+      end
+    end
+    def help
+      @options.display_banner_and_return
+    end
+    private
+      def apache_log_directory
+        File.expand_path(File.join('~', 'tmp', SCRIPT, 'log', @options.domain))
+      end
+      def create_apache_log_directory
+        FileUtils.mkdir_p(apache_log_directory)
+      end
+      def warn_and_return
+        puts "Please use sudo to use this utility to create or delete virtual hosts"
+        exit
+      end
+      def sudoer?
+        # A proxy for actually knowing whether or not the user has all required privileges
+        File.stat(APACHE_CONFIG).writable?
+      end
+      def vhost_config
+        domain, directory = @options.domain, @options.directory
+        template = <<-EOT
+        <VirtualHost *:80>
+          ServerName <%= domain %>
+          DocumentRoot <%= directory %>
+          <Directory <%= directory %>>
+            AllowOverride All
+            allow from all
+          </Directory>
+          <DirectoryMatch "^/.*/\.svn/">
+            ErrorDocument 403 /404.html
+            Order allow,deny
+            Deny from all
+            Satisfy All
+          </DirectoryMatch>
+          ErrorLog <%= File.join(apache_log_directory, 'error_log') %>
+          CustomLog <%= File.join(apache_log_directory, 'access_log') %> common
+          #RewriteLogLevel 3
+          RewriteLog <%= File.join(apache_log_directory, 'rewrite_log') %>
+        </VirtualHost>
+        EOT
+        ERB.new(template).result(binding)
+      end
+      def config_filename
+        File.join(VHOSTS_DIR, "#{@options.domain}.conf")
+      end
+      def setup_apache_config
+        unless File.read(APACHE_CONFIG).include?("Include #{File.join(VHOSTS_DIR, '*.conf')}")
+          File.open(APACHE_CONFIG, 'a') do |file|
+            file.puts ""
+            file.puts ""
+            file.puts "# Line added by #{SCRIPT}"
+            file.puts "NameVirtualHost *:80"
+            file.puts "Include #{File.join(VHOSTS_DIR, '*.conf')}"
+          end
+        end
+      end
+      def create_vhost_directory
+        FileUtils.mkdir_p(VHOSTS_DIR)
+      end
+  end
+end
+
+options = Hostess::Options.new(*ARGV)
+options.display_banner_and_return unless options.valid?
+
+Hostess::VirtualHost.new(options).execute!
