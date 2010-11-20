@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{hostess}
-  s.version = "0.1.1"
+  s.version = "0.1.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Chris Roos, James Adam"]
@@ -10,11 +10,11 @@ Gem::Specification.new do |s|
   s.default_executable = %q{hostess}
   s.email = %q{chris@chrisroos.co.uk}
   s.executables = ["hostess"]
-  s.extra_rdoc_files = ["README"]
-  s.files = ["README", "Rakefile", "bin/hostess"]
+  s.extra_rdoc_files = ["README.md"]
+  s.files = ["README.md", "Rakefile", "bin/hostess"]
   s.has_rdoc = false
   s.homepage = %q{http://chrisroos.co.uk}
-  s.rdoc_options = ["--main", "README"]
+  s.rdoc_options = ["--main", "README.md"]
   s.require_paths = ["bin"]
   s.rubyforge_project = %q{hostess}
   s.rubygems_version = %q{1.3.7}

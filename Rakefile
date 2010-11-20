@@ -15,7 +15,7 @@ spec = Gem::Specification.new do |s|
   
   # Change these as appropriate
   s.name              = "hostess"
-  s.version           = "0.1.1"
+  s.version           = "0.1.2"
   s.summary           = "Manage simple apache virtual hosts"
   s.author            = "Chris Roos, James Adam"
   s.email             = "chris@chrisroos.co.uk"
@@ -25,13 +25,13 @@ spec = Gem::Specification.new do |s|
   
   # You should probably have a README of some kind. Change the filename
   # as appropriate
-  s.extra_rdoc_files  = %w(README)
-  s.rdoc_options      = %w(--main README)
+  s.extra_rdoc_files  = %w(README.md)
+  s.rdoc_options      = %w(--main README.md)
   
   s.require_paths     = ['bin']
 
   # Add any extra files to include in the gem (like your README)
-  s.files             = %w(README Rakefile) + Dir.glob("{bin}/**/*")
+  s.files             = %w(README.md Rakefile) + Dir.glob("{bin}/**/*")
   s.executables       = FileList["bin/**"].map { |f| File.basename(f) }
   
   # If you want to depend on other gems, add them here, along with any
