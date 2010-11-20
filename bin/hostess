@@ -99,6 +99,7 @@ EndBanner
           ServerName <%= domain %>
           DocumentRoot <%= directory %>
           <Directory <%= directory %>>
+            Options FollowSymLinks
             AllowOverride All
             allow from all
           </Directory>
