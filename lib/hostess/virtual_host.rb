@@ -7,18 +7,19 @@ module Hostess
       __send__(@options.action)
     end
     def create
-      warn_and_return unless sudoer?
       setup_apache_config
       create_vhost_directory
       create_apache_log_directory
-      system "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
-      File.open(config_filename, 'w') { |f| f.puts(vhost_config) }
+      sudo "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
+      tempfile = Tempfile.new('vhost')
+      tempfile.puts(vhost_config)
+      tempfile.close
+      sudo "mv #{tempfile.path} #{config_filename}"
       restart_apache
     end
     def delete
-      warn_and_return unless sudoer?
-      system "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
-      File.delete(config_filename)
+      sudo "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
+      sudo "rm #{config_filename}"
       restart_apache
     end
     def list
@@ -34,15 +35,7 @@ module Hostess
         File.join(VHOSTS_LOG_DIR, @options.domain)
       end
       def create_apache_log_directory
-        FileUtils.mkdir_p(apache_log_directory)
-      end
-      def warn_and_return
-        puts "Please use sudo to use this utility to create or delete virtual hosts"
-        exit
-      end
-      def sudoer?
-        # A proxy for actually knowing whether or not the user has all required privileges
-        File.stat(APACHE_CONFIG).writable?
+        sudo "mkdir -p #{apache_log_directory}"
       end
       def vhost_config
         domain, directory = @options.domain, @options.directory
@@ -74,20 +67,23 @@ module Hostess
       end
       def setup_apache_config
         unless File.read(APACHE_CONFIG).include?("Include #{File.join(VHOSTS_DIR, '*.conf')}")
-          File.open(APACHE_CONFIG, 'a') do |file|
-            file.puts ""
-            file.puts ""
-            file.puts "# Line added by #{SCRIPT}"
-            file.puts "NameVirtualHost *:80"
-            file.puts "Include #{File.join(VHOSTS_DIR, '*.conf')}"
-          end
+          sudo "echo '' >> #{APACHE_CONFIG}"
+          sudo "echo '' >> #{APACHE_CONFIG}"
+          sudo "echo '# Line added by #{SCRIPT}' >> #{APACHE_CONFIG}"
+          sudo "echo 'NameVirtualHost *:80' >> #{APACHE_CONFIG}"
+          sudo "echo 'Include #{File.join(VHOSTS_DIR, '*.conf')}' >> #{APACHE_CONFIG}"
         end
       end
       def create_vhost_directory
-        FileUtils.mkdir_p(VHOSTS_DIR)
+        sudo "mkdir -p #{VHOSTS_DIR}"
       end
       def restart_apache
-        `apachectl restart`
+        sudo "apachectl restart"
+      end
+      def sudo(cmd)
+        sudo_cmd = "sudo -s \"#{cmd}\""
+        puts sudo_cmd if $DEBUG
+        system sudo_cmd
       end
   end
 end
