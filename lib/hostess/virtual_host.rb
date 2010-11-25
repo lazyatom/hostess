@@ -10,16 +10,13 @@ module Hostess
       setup_apache_config
       create_vhost_directory
       create_apache_log_directory
-      sudo "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
-      tempfile = Tempfile.new('vhost')
-      tempfile.puts(vhost_config)
-      tempfile.close
-      sudo "mv #{tempfile.path} #{config_filename}"
+      create_dns_entry
+      create_vhost
       restart_apache
     end
     def delete
-      sudo "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
-      sudo "rm #{config_filename}"
+      delete_dns_entry
+      delete_vhost
       restart_apache
     end
     def list
@@ -31,6 +28,21 @@ module Hostess
       @options.display_banner_and_return
     end
     private
+      def create_dns_entry
+        sudo "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
+      end
+      def delete_dns_entry
+        sudo "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
+      end
+      def create_vhost
+        tempfile = Tempfile.new('vhost')
+        tempfile.puts(vhost_config)
+        tempfile.close
+        sudo "mv #{tempfile.path} #{config_filename}"
+      end
+      def delete_vhost
+        sudo "rm #{config_filename}"
+      end
       def apache_log_directory
         File.join(VHOSTS_LOG_DIR, @options.domain)
       end
