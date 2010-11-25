@@ -31,7 +31,7 @@ module Hostess
     end
     private
       def apache_log_directory
-        File.expand_path(File.join('~', "." + SCRIPT, 'log', @options.domain))
+        File.join(VHOSTS_LOG_DIR, @options.domain)
       end
       def create_apache_log_directory
         FileUtils.mkdir_p(apache_log_directory)
