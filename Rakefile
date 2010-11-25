@@ -15,7 +15,7 @@ spec = Gem::Specification.new do |s|
   
   # Change these as appropriate
   s.name              = "hostess"
-  s.version           = "0.1.2"
+  s.version           = "0.1.3"
   s.summary           = "Manage simple apache virtual hosts"
   s.author            = "Chris Roos, James Adam"
   s.email             = "chris@chrisroos.co.uk"
