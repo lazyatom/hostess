@@ -20,7 +20,7 @@ spec = Gem::Specification.new do |s|
   
   # Change these as appropriate
   s.name              = "hostess"
-  s.version           = "0.1.4"
+  s.version           = "0.1.6"
   s.summary           = "Manage simple apache virtual hosts"
   s.author            = "Chris Roos, James Adam"
   s.email             = "chris@chrisroos.co.uk"
@@ -36,7 +36,7 @@ spec = Gem::Specification.new do |s|
   s.require_paths     = ['bin', 'lib']
 
   # Add any extra files to include in the gem (like your README)
-  s.files             = %w(README.md Rakefile) + Dir.glob("{bin}/**/*")
+  s.files             = %w(README.md Rakefile) + Dir.glob("{bin}/**/*") + Dir.glob("{lib}/**/*")
   s.executables       = FileList["bin/**"].map { |f| File.basename(f) }
   
   # If you want to depend on other gems, add them here, along with any
