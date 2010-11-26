@@ -2,9 +2,14 @@ require "rubygems"
 require "rake/gempackagetask"
 require "rake/rdoctask"
 
-task :default => :package do
-  puts "Don't forget to write some tests!"
+require "rake/testtask"
+Rake::TestTask.new do |t|
+  t.libs << "test"
+  t.test_files = FileList["test/**/*_test.rb"]
+  t.verbose = true
 end
+
+task :default => ["test"]
 
 # This builds the actual gem. For details of what all these options
 # mean, and other ones you can add, check the documentation here:
