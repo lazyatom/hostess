@@ -3,57 +3,74 @@ require 'test_helper'
 class HostessIntegrationTest < Test::Unit::TestCase
   
   def test_creating_a_virtual_host
-    # Remove our test directory
-    FileUtils.rm_rf(Hostess::Test::HOSTESS_TEST_DIR)
-    
-    # Create our test subdirectories
-    FileUtils.mkdir_p(Hostess::Test::APACHE_CONFIG_DIR)
-    FileUtils.mkdir_p(Hostess::Test::APACHE_LOG_DIR)
-    FileUtils.mkdir_p(Hostess::Test::WEBSITE_DIR)
-
-    # Configure Hostess to use our test directories and to disable sudo
-    Hostess.apache_config_dir = Hostess::Test::APACHE_CONFIG_DIR
-    Hostess.apache_log_dir    = Hostess::Test::APACHE_LOG_DIR
+    Hostess.apache_config_dir = File.join(Dir.tmpdir, 'hostess', 'apache_config')
+    Hostess.apache_log_dir    = File.join(Dir.tmpdir, 'hostess', 'apache_logs')
     Hostess.disable_sudo!
     
-    # Ensure the apache config file exists
-    FileUtils.touch(Hostess.apache_config)
+    create_hostess_directories_and_apache_config
     
-    domain       = 'example.local'
-    options      = Hostess::Options.new('create', domain, Hostess::Test::WEBSITE_DIR)
+    domain, path_to_site = 'example.local', '/path/to/site'
+    options      = Hostess::Options.new('create', domain, path_to_site)
     virtual_host = Hostess::VirtualHost.new(options)
     
-    # Assert that we setup the local DNS entry
-    virtual_host.expects(:create_dns_entry)
-    
-    # Assert that we restart apache
-    virtual_host.expects(:restart_apache)
+    ensure_we_setup_the_local_dns_entry(virtual_host)
+    ensure_we_restart_apache(virtual_host)
     
     virtual_host.execute!
+
+    assert_that_we_have_updated_the_apache_config_file
+    assert_that_we_have_created_the_hostess_vhosts_directory
+    assert_that_we_have_created_the_hostess_log_directory
+    assert_that_we_have_created_the_vhost(domain, path_to_site)
+  end
+  
+  private
+  
+    def create_hostess_directories_and_apache_config
+      # Remove our test directories and apache config
+      FileUtils.rm_f(Hostess.apache_config_dir)
+      FileUtils.rm_f(Hostess.apache_log_dir)
+      FileUtils.rm_f(Hostess.apache_config)
+
+      # Create our test subdirectories and apache config
+      FileUtils.mkdir_p(Hostess.apache_config_dir)
+      FileUtils.mkdir_p(Hostess.apache_log_dir)
+      FileUtils.touch(Hostess.apache_config)
+    end
+  
+    def ensure_we_setup_the_local_dns_entry(virtual_host)
+      virtual_host.expects(:create_dns_entry)
+    end
     
-    # Assert that we've updated the apache config file correctly
-    expected_apache_config_file_content = <<-EOS
+    def ensure_we_restart_apache(virtual_host)
+      virtual_host.expects(:restart_apache)
+    end
+    
+    def assert_that_we_have_updated_the_apache_config_file
+      expected_apache_config_file_content = <<-EOS
 
 
 # Line added by #{Hostess.script_name}
 NameVirtualHost *:80
 Include #{File.join(Hostess.vhosts_dir, '*.conf')}
-    EOS
-    assert_equal expected_apache_config_file_content, File.read(Hostess.apache_config)
+      EOS
+      assert_equal expected_apache_config_file_content, File.read(Hostess.apache_config)
+    end
     
-    # Assert that we've created the hostess vhosts directory
-    assert File.directory?(Hostess.vhosts_dir)
+    def assert_that_we_have_created_the_hostess_vhosts_directory
+      assert File.directory?(Hostess.vhosts_dir)
+    end
     
-    # Assert that we've created the hostess log directory
-    assert File.directory?(Hostess.vhosts_log_dir)
+    def assert_that_we_have_created_the_hostess_log_directory
+      assert File.directory?(Hostess.vhosts_log_dir)
+    end
     
-    # Assert that we've create the vhost config
-    domain, directory, apache_ = 'example.local', Hostess::Test::WEBSITE_DIR
-    expected_vhost_content = <<-EOS
+    def assert_that_we_have_created_the_vhost(domain, path_to_site)
+      expected_vhost_content = <<-EOS
 <VirtualHost *:80>
   ServerName #{domain}
-  DocumentRoot #{Hostess::Test::WEBSITE_DIR}
-  <Directory #{Hostess::Test::WEBSITE_DIR}>
+  DocumentRoot #{path_to_site}
+  <Directory #{path_to_site}>
     Options FollowSymLinks
     AllowOverride All
     allow from all
@@ -69,10 +86,8 @@ Include #{File.join(Hostess.vhosts_dir, '*.conf')}
   #RewriteLogLevel 3
   RewriteLog #{File.join(Hostess.vhosts_log_dir, domain, 'rewrite_log')}
 </VirtualHost>
-    EOS
-    vhost_config_file = File.join(Hostess.vhosts_dir, 'example.local.conf')
-    assert File.exists?(vhost_config_file)
-    assert_equal expected_vhost_content, File.read(vhost_config_file)
-  end
+      EOS
+      assert_equal expected_vhost_content, File.read(File.join(Hostess.vhosts_dir, "#{domain}.conf"))
+    end
   
 end
