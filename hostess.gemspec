@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.has_rdoc = false
   s.homepage = %q{http://chrisroos.co.uk}
   s.rdoc_options = ["--main", "README.md"]
-  s.require_paths = ["bin"]
+  s.require_paths = ["bin", "lib"]
   s.rubyforge_project = %q{hostess}
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{Manage simple apache virtual hosts}
@@ -25,8 +25,11 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_development_dependency(%q<mocha>, [">= 0"])
     else
+      s.add_dependency(%q<mocha>, [">= 0"])
     end
   else
+    s.add_dependency(%q<mocha>, [">= 0"])
   end
 end

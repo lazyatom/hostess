@@ -33,7 +33,7 @@ spec = Gem::Specification.new do |s|
   s.extra_rdoc_files  = %w(README.md)
   s.rdoc_options      = %w(--main README.md)
   
-  s.require_paths     = ['bin']
+  s.require_paths     = ['bin', 'lib']
 
   # Add any extra files to include in the gem (like your README)
   s.files             = %w(README.md Rakefile) + Dir.glob("{bin}/**/*")
@@ -44,7 +44,7 @@ spec = Gem::Specification.new do |s|
   # s.add_dependency("some_other_gem", "~> 0.1.0")
   
   # If your tests use any gems, include them here
-  # s.add_development_dependency("mocha")
+  s.add_development_dependency("mocha")
 
   # If you want to publish automatically to rubyforge, you'll may need
   # to tweak this, and the publishing task below too.
