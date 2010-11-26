@@ -1,7 +1,7 @@
 module Hostess
   class VirtualHost
-    def initialize(options)
-      @options = options
+    def initialize(options, debug=false)
+      @options, @debug = options, debug
     end
     def execute!
       __send__(@options.action)
@@ -20,7 +20,7 @@ module Hostess
       restart_apache
     end
     def list
-      Dir[File.join(VHOSTS_DIR, '*.conf')].each do |config_file|
+      Dir[File.join(Hostess.vhosts_dir, '*.conf')].each do |config_file|
         puts File.basename(config_file, '.conf')
       end
     end
@@ -29,25 +29,25 @@ module Hostess
     end
     private
       def create_dns_entry
-        sudo "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
+        run "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
       end
       def delete_dns_entry
-        sudo "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
+        run "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
       end
       def create_vhost
         tempfile = Tempfile.new('vhost')
         tempfile.puts(vhost_config)
         tempfile.close
-        sudo "mv #{tempfile.path} #{config_filename}"
+        run "mv #{tempfile.path} #{config_filename}"
       end
       def delete_vhost
-        sudo "rm #{config_filename}"
+        run "rm #{config_filename}"
       end
       def apache_log_directory
-        File.join(VHOSTS_LOG_DIR, @options.domain)
+        File.join(Hostess.vhosts_log_dir, @options.domain)
       end
       def create_apache_log_directory
-        sudo "mkdir -p #{apache_log_directory}"
+        run "mkdir -p #{apache_log_directory}"
       end
       def vhost_config
         domain, directory = @options.domain, @options.directory
@@ -75,27 +75,30 @@ module Hostess
         ERB.new(template).result(binding)
       end
       def config_filename
-        File.join(VHOSTS_DIR, "#{@options.domain}.conf")
+        File.join(Hostess.vhosts_dir, "#{@options.domain}.conf")
       end
       def setup_apache_config
-        unless File.read(APACHE_CONFIG).include?("Include #{File.join(VHOSTS_DIR, '*.conf')}")
-          sudo "echo '' >> #{APACHE_CONFIG}"
-          sudo "echo '' >> #{APACHE_CONFIG}"
-          sudo "echo '# Line added by #{SCRIPT}' >> #{APACHE_CONFIG}"
-          sudo "echo 'NameVirtualHost *:80' >> #{APACHE_CONFIG}"
-          sudo "echo 'Include #{File.join(VHOSTS_DIR, '*.conf')}' >> #{APACHE_CONFIG}"
+        unless File.read(Hostess.apache_config).include?("Include #{File.join(Hostess.vhosts_dir, '*.conf')}")
+          run "echo '' >> #{Hostess.apache_config}"
+          run "echo '' >> #{Hostess.apache_config}"
+          run "echo '# Line added by #{Hostess.script_name}' >> #{Hostess.apache_config}"
+          run "echo 'NameVirtualHost *:80' >> #{Hostess.apache_config}"
+          run "echo 'Include #{File.join(Hostess.vhosts_dir, '*.conf')}' >> #{Hostess.apache_config}"
         end
       end
       def create_vhost_directory
-        sudo "mkdir -p #{VHOSTS_DIR}"
+        run "mkdir -p #{Hostess.vhosts_dir}"
       end
       def restart_apache
-        sudo "apachectl restart"
+        run "apachectl restart"
+      end
+      def run(cmd)
+        cmd = sudo(cmd) if Hostess.use_sudo?
+        puts cmd if @debug
+        system cmd
       end
       def sudo(cmd)
-        sudo_cmd = "sudo -s \"#{cmd}\""
-        puts sudo_cmd if $DEBUG
-        system sudo_cmd
+         "sudo -s \"#{cmd}\""
       end
   end
 end

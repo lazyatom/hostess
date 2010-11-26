@@ -30,10 +30,10 @@ module Hostess
       def banner
 <<EndBanner
   Usage:
-    #{SCRIPT} create domain directory - create a new virtual host
-    #{SCRIPT} delete domain           - delete a virtual host
-    #{SCRIPT} list                    - list #{SCRIPT} virtual hosts
-    #{SCRIPT} help                    - this info
+    #{Hostess.script_name} create domain directory - create a new virtual host
+    #{Hostess.script_name} delete domain           - delete a virtual host
+    #{Hostess.script_name} list                    - list #{Hostess.script_name} virtual hosts
+    #{Hostess.script_name} help                    - this info
 EndBanner
       end
   end
