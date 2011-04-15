@@ -54,8 +54,8 @@ module Hostess
         template = <<-EOT
 <VirtualHost *:80>
   ServerName <%= domain %>
-  DocumentRoot <%= directory %>
-  <Directory <%= directory %>>
+  DocumentRoot "<%= directory %>"
+  <Directory "<%= directory %>">
     Options FollowSymLinks
     AllowOverride All
     allow from all

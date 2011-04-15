@@ -69,8 +69,8 @@ Include #{File.join(Hostess.vhosts_dir, '*.conf')}
       expected_vhost_content = <<-EOS
 <VirtualHost *:80>
   ServerName #{domain}
-  DocumentRoot #{path_to_site}
-  <Directory #{path_to_site}>
+  DocumentRoot "#{path_to_site}"
+  <Directory "#{path_to_site}">
     Options FollowSymLinks
     AllowOverride All
     allow from all
