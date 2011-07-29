@@ -17,6 +17,7 @@ module Hostess
     def delete
       delete_dns_entry
       delete_vhost
+      delete_apache_log_directory
       restart_apache
     end
     def list
@@ -59,6 +60,9 @@ module Hostess
       end
       def create_apache_log_directory
         run "mkdir -p #{apache_log_directory}"
+      end
+      def delete_apache_log_directory
+        run "rm -r #{apache_log_directory}"
       end
       def vhost_config
         domain, directory = @options.domain, @options.directory
