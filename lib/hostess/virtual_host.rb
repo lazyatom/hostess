@@ -28,11 +28,22 @@ module Hostess
       @options.display_banner_and_return
     end
     private
+      def hosts_filename
+        File.join('/', 'etc', 'hosts')
+      end
       def create_dns_entry
-        run "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
+        # doesn't work in os x lion:
+        #run "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
+        
+        # workaround:
+        run "echo '127.0.0.1 #{@options.domain}' >> #{hosts_filename}"
       end
       def delete_dns_entry
-        run "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
+        # doesn't work in os x lion:
+        #run "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
+        
+        # workaround:
+        run "perl -pi -e 's/127.0.0.1 #{@options.domain}//g' #{hosts_filename}"
       end
       def create_vhost
         tempfile = Tempfile.new('vhost')
