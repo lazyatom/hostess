@@ -17,6 +17,7 @@ module Hostess
     def delete
       delete_dns_entry
       delete_vhost
+      delete_apache_log_directory
       restart_apache
     end
     def list
@@ -28,11 +29,22 @@ module Hostess
       @options.display_banner_and_return
     end
     private
+      def hosts_filename
+        File.join('/', 'etc', 'hosts')
+      end
       def create_dns_entry
-        run "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
+        # doesn't work in os x lion:
+        #run "dscl localhost -create /Local/Default/Hosts/#{@options.domain} IPAddress 127.0.0.1"
+        
+        # workaround:
+        run "echo '127.0.0.1 #{@options.domain}' >> #{hosts_filename}"
       end
       def delete_dns_entry
-        run "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
+        # doesn't work in os x lion:
+        #run "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
+        
+        # workaround:
+        run "perl -pi -e 's/127.0.0.1 #{@options.domain}//g' #{hosts_filename}"
       end
       def create_vhost
         tempfile = Tempfile.new('vhost')
@@ -48,6 +60,9 @@ module Hostess
       end
       def create_apache_log_directory
         run "mkdir -p #{apache_log_directory}"
+      end
+      def delete_apache_log_directory
+        run "rm -r #{apache_log_directory}"
       end
       def vhost_config
         domain, directory = @options.domain, @options.directory
