@@ -46,7 +46,7 @@ module Hostess
         if dscl_works?
           run "dscl localhost -delete /Local/Default/Hosts/#{@options.domain}"
         else
-          run "perl -pi -e 's/127.0.0.1 #{@options.domain}//g' #{hosts_filename}"
+          run "perl -pi -e 's/127.0.0.1 #{@options.domain}\\n//g' #{hosts_filename}"
         end
       end
       def create_vhost
