@@ -74,6 +74,7 @@ module Hostess
   ServerName <%= domain %>
   DocumentRoot "<%= directory %>"
   <Directory "<%= directory %>">
+    Require all granted
     Options FollowSymLinks
     AllowOverride All
     allow from all
